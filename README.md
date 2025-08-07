@@ -27,3 +27,7 @@ pip install -r requirements.txt  # （未來會補上）
 
 ```bash
 python main.py --file data/sample.csv --out result.csv
+
+## License
+
+This project is licensed under the MIT License.
