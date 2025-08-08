@@ -34,6 +34,9 @@ $ python main.py --file data/sample.csv --out result.csv
 你輸入的檔案路徑是：data/sample.csv
 分析結果已儲存到:result.csv
 ```
+## 📷 輸出結果示例
+<img width="337" height="67" alt="image" src="https://github.com/user-attachments/assets/3fc85351-50d5-4b1b-b56b-dfbbeede1b6f" />
+
 
 ---
 
