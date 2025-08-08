@@ -31,3 +31,12 @@ python main.py --file data/sample.csv --out result.csv
 ## License
 
 This project is licensed under the MIT License.
+
+### 🖥️ CLI 執行畫面 (Console Output)
+
+```bash
+$ python main.py --file data/sample.csv --out result.csv
+分析完成結果：共 4 筆資料
+你輸入的檔案路徑是：data/sample.csv
+分析結果已儲存到:result.csv
+
