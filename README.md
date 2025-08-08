@@ -21,7 +21,6 @@ BioFlow is a bioinformatics data processing and visualization platform. It start
 ```bash
 pip install -r requirements.txt  # （未來會補上）
 
-
 ### 執行 CLI 工具
 
 python main.py --file data/sample.csv --out result.csv
@@ -36,6 +35,7 @@ $ python main.py --file data/sample.csv --out result.csv
 你輸入的檔案路徑是：data/sample.csv
 分析結果已儲存到:result.csv
 
-## License
+---
 
+## License
 This project is licensed under the MIT License.
