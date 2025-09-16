@@ -26,17 +26,16 @@ docker compose up --build
 - API (FastAPI)：http://localhost:8000
 - 前端 (Streamlit)：http://localhost:8501
 
-
-
-
 ---
 
 ##  結果示例
-
-
-
-
+<img width="1566" height="772" alt="image" src="https://github.com/user-attachments/assets/2fe687d1-8f01-46f3-8316-54ae749ba100" />
 
 ---
+
+##  MIT License
+本專案採用 MIT License，可自由使用、修改與再散佈
+
+
 
 ##  
