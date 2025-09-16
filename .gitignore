@@ -1,0 +1,15 @@
+# 環境設定
+.env
+
+# SQLite 資料庫
+*.db
+/data/*.db
+
+# 使用者上傳/輸出資料
+/uploads/
+/results/
+/data/sample.csv
+
+# Python cache
+__pycache__/
+*.pyc
