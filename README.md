@@ -18,14 +18,13 @@ BioFlow 是一套專為生醫領域設計的資料處理與分析平台，支援
 ##  測試
 使用Docker一健啟動
 
-bash```
-
+```bash
 docker compose up --build
 ```
 
 啟動後:
-
-
+API (FastAPI)：http://localhost:8000
+前端 (Streamlit)：http://localhost:8501
 
 
 
