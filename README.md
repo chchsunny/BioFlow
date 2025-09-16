@@ -23,8 +23,8 @@ docker compose up --build
 ```
 
 啟動後:
-API (FastAPI)：http://localhost:8000
-前端 (Streamlit)：http://localhost:8501
+- API (FastAPI)：http://localhost:8000
+- 前端 (Streamlit)：http://localhost:8501
 
 
 
