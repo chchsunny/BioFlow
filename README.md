@@ -1,10 +1,10 @@
-#  BioFlow — 生物資料處理平台
+#  BioFlow 
 
 BioFlow 是一套專為生醫領域設計的資料處理與分析平台，支援 命令列操作 (CLI)、FastAPI 後端 API 與 Streamlit Web UI，並提供 Docker Compose 一鍵部署。使用者可透過 CSV 檔上傳實驗數據，系統會自動進行資料清理、差異分析並產生結果檔案（CSV、PNG 火山圖），BioFlow 可廣泛應用於 RNA-seq 等實驗數據分析與結果視覺化。
 
 ---
 
-##  功能
+##  features
 
 -  支援 CLI 命令列操作（CSV 檔案讀取與驗證）
 -  提供 FastAPI API（Swagger /docs 測試介面）
@@ -15,7 +15,7 @@ BioFlow 是一套專為生醫領域設計的資料處理與分析平台，支援
 
 ---
 
-##  測試
+##  start up
 使用Docker一健啟動
 
 ```bash
@@ -28,7 +28,7 @@ docker compose up --build
 
 ---
 
-##  結果示例
+##  results
 <img width="1566" height="772" alt="image" src="https://github.com/user-attachments/assets/2fe687d1-8f01-46f3-8316-54ae749ba100" />
 
 ---
@@ -36,6 +36,3 @@ docker compose up --build
 ##  MIT License
 本專案採用 MIT License，可自由使用、修改與再散佈
 
-
-
-##  
