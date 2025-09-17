@@ -34,5 +34,5 @@ docker compose up --build
 ---
 
 ##  MIT License
-本專案採用 MIT License，可自由使用、修改與再散佈
+本專案使用 MIT License 授權，歡迎自由使用與參考
 
