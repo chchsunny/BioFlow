@@ -22,7 +22,7 @@ BioFlow 是一套專為生醫領域設計的資料處理與分析平台，支援
 docker compose up --build
 ```
 3. 啟動後
-- API (FastAPI)：http://localhost:8000
+- API (FastAPI)：http://localhost:8000/docs
 - 前端 (Streamlit)：http://localhost:8501
 
 ---
