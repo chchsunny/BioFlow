@@ -1,4 +1,3 @@
-# auth.py  — FastAPI 最小可用登入/註冊 + JWT
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
@@ -8,7 +7,7 @@ from passlib.context import CryptContext
 from datetime import datetime, timedelta
 import jwt
 
-# ===== 基本設定 =====
+# 基本設定
 SECRET_KEY = "CHANGE_ME_TO_A_RANDOM_SECRET"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
@@ -26,7 +25,7 @@ def get_db():
     finally:
         db.close()
 
-# ===== 資料表 =====
+# 資料表
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
@@ -35,7 +34,7 @@ class User(Base):
 
 Base.metadata.create_all(bind=engine)
 
-# ===== Pydantic =====
+# Pydantic
 class RegisterReq(BaseModel):
     username: str
     password: str
@@ -44,7 +43,7 @@ class TokenResp(BaseModel):
     access_token: str
     token_type: str = "bearer"
 
-# ===== 工具 =====
+# 工具
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
     expire = datetime.utcnow() + (expires_delta or timedelta(minutes=15))
@@ -57,7 +56,7 @@ def verify_password(plain, hashed):
 def hash_password(pw: str) -> str:
     return pwd_context.hash(pw)
 
-# ===== App =====
+# App
 app = FastAPI(title="Auth API")
 
 @app.post("/auth/register", status_code=201)
