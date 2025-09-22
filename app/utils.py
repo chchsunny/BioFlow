@@ -1,18 +1,14 @@
-# utils.py
 import csv
 import pandas as pd
 import numpy as np
-
-# 建議在無頭環境（伺服器）使用 Agg backend，避免找不到 GUI backend
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-# -------- 基本設定 --------
-# 必要欄位（請保持 list 型態）
+# 基本設定 
 REQUIRED_COLUMNS = ["gene", "ctrl", "treat"]
 
-# 欄位別名（不要覆蓋 REQUIRED_COLUMNS）
+# 欄位別名
 COLUMN_ALIASES = {
     "gene":  ["gene", "gene_id", "symbol", "Gene", "GENE"],
     "ctrl":  ["ctrl", "control", "CTRL", "Control", "ctl"],
@@ -20,7 +16,7 @@ COLUMN_ALIASES = {
 }
 
 
-# -------- I/O 與前處理 --------
+# I/O 與前處理 
 def normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
     """把別名欄位自動改成標準欄名（不就地修改）"""
     df = df.copy()
@@ -112,7 +108,7 @@ def clean_data(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-# -------- 分析與視覺化 --------
+# 分析與視覺化
 def compute_diff(df: pd.DataFrame, eps: float = 1e-9):
     """
     計算 ctrl vs treat 的差異：
@@ -123,7 +119,7 @@ def compute_diff(df: pd.DataFrame, eps: float = 1e-9):
     回傳：result_df（含上述新欄位）、summary（文字摘要）
     """
     df = df.copy()
-    # 必要欄位檢查（保險）
+    # 必要欄位檢查
     for c in ("ctrl", "treat"):
         if c not in df.columns:
             raise ValueError(f"compute_diff 需要欄位 '{c}'")
@@ -171,7 +167,7 @@ def plot_volcano(df: pd.DataFrame, output_path: str, fc_threshold: float = 1.0):
     colors = data["direction"].map(color_map).fillna("grey")
 
     plt.figure(figsize=(8, 6))
-    # 散點（一次畫完）
+    # 散點
     plt.scatter(
         data["log2FC"].values,
         data["abs_delta"].values,
