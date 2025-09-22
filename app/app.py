@@ -1,4 +1,3 @@
-# app.py — BioFlow API (username-based auth, /jobs list, /jobs/{id} download)
 from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, Query, status
 from fastapi.responses import FileResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -29,10 +28,10 @@ from app.db import (
 
 app = FastAPI(title="BioFlow API", version="0.3.4", debug=True)
 
-#  每位使用者最多保留幾筆任務
+# 每位使用者最多保留幾筆任務
 MAX_JOBS_PER_USER = 20
 
-#  啟動時初始化
+# 啟動時初始化
 @app.on_event("startup")
 def on_startup():
     init_db()
@@ -40,7 +39,7 @@ def on_startup():
     os.makedirs("results", exist_ok=True)
     print(" Database initialized and folders ready.")
 
-# ----------------- Security / helpers -----------------
+# Security / helpers 
 security = HTTPBearer()
 
 def current_user(
@@ -79,12 +78,12 @@ def enforce_user_quota(db: Session, user_id: int, keep: int = MAX_JOBS_PER_USER)
         db.delete(j)
     db.commit()
 
-# ----------------- Health -----------------
+# Health 
 @app.get("/health")
 def health():
     return {"status": "ok"}
 
-# -----------------  內建Auth -----------------
+# 內建Auth 
 @app.post("/auth/register")
 def register(username: str, password: str, db: Session = Depends(get_db)):
     if db.query(User).filter(User.username == username).first():
@@ -102,7 +101,7 @@ def login(username: str, password: str, db: Session = Depends(get_db)):
     token = create_access_token({"sub": user.username})
     return {"access_token": token, "token_type": "bearer"}
 
-# ----------------- 上傳分析 -----------------
+# 上傳分析
 @app.post("/upload-csv/")
 async def upload_csv(
     file: UploadFile = File(...),
@@ -151,14 +150,14 @@ async def upload_csv(
         plot_path = os.path.join("results", plot_filename)
         plot_volcano(result_df, plot_path)
 
-        # 更新 Job（finished）
+        # 更新Job
         job.status = "finished"
         job.summary = summary
         job.result_path = result_path
         job.plot_path = plot_path
         db.commit()
 
-        #  配額控制：只保留最近 MAX_JOBS_PER_USER 筆
+        # 只保留最近 MAX_JOBS_PER_USER 筆
         enforce_user_quota(db, user.id, keep=MAX_JOBS_PER_USER)
 
         return {"job_id": job_uid, "status": "queued"}
@@ -170,7 +169,7 @@ async def upload_csv(
         db.commit()
         raise HTTPException(status_code=500, detail=f"分析時發生錯誤: {e}")
 
-# ----------------- 歷史任務（清單） -----------------
+# 歷史清單
 @app.get("/jobs")
 def my_jobs(
     user: User = Depends(current_user),
@@ -196,7 +195,7 @@ def my_jobs(
         for j in jobs
     ]
 
-# ----------------- 單筆 job 查詢 / 下載 -----------------
+# 單筆job查詢/下載
 @app.get("/jobs/{job_id}")
 def get_job(
     job_id: str,
@@ -233,7 +232,7 @@ def get_job(
         "plot_filename": os.path.basename(j.plot_path) if j.plot_path else None,
     }
 
-# ----------------- 刪除任務（含檔案） -----------------
+# 刪除檔案
 @app.delete("/jobs/{job_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_job(
     job_id: str,
@@ -248,7 +247,7 @@ def delete_job(
     db.commit()
     return  # 204 No Content
 
-# ----------------- 以檔名下載 -----------------
+# 以檔名下載
 @app.get("/results/{filename}")
 def get_result(
     filename: str,
