@@ -29,16 +29,16 @@ from app.db import (
 
 app = FastAPI(title="BioFlow API", version="0.3.4", debug=True)
 
-# ★ 每位使用者最多保留幾筆任務
+#  每位使用者最多保留幾筆任務
 MAX_JOBS_PER_USER = 20
 
-# ✅ 啟動時初始化
+#  啟動時初始化
 @app.on_event("startup")
 def on_startup():
     init_db()
     os.makedirs("uploads", exist_ok=True)
     os.makedirs("results", exist_ok=True)
-    print("✅ Database initialized and folders ready.")
+    print(" Database initialized and folders ready.")
 
 # ----------------- Security / helpers -----------------
 security = HTTPBearer()
@@ -50,7 +50,7 @@ def current_user(
     payload = decode_token(creds.credentials)
     if not payload or "sub" not in payload:
         raise HTTPException(status_code=401, detail="Invalid token")
-    username = payload["sub"]  # 用 username（和 auth.py / Streamlit 對齊）
+    username = payload["sub"]  
     user = db.query(User).filter(User.username == username).first()
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
@@ -84,7 +84,7 @@ def enforce_user_quota(db: Session, user_id: int, keep: int = MAX_JOBS_PER_USER)
 def health():
     return {"status": "ok"}
 
-# ----------------- （可保留）內建 Auth（若你用獨立 auth.py 可忽略） -----------------
+# -----------------  內建Auth -----------------
 @app.post("/auth/register")
 def register(username: str, password: str, db: Session = Depends(get_db)):
     if db.query(User).filter(User.username == username).first():
@@ -102,7 +102,7 @@ def login(username: str, password: str, db: Session = Depends(get_db)):
     token = create_access_token({"sub": user.username})
     return {"access_token": token, "token_type": "bearer"}
 
-# ----------------- 上傳 + 分析 -----------------
+# ----------------- 上傳分析 -----------------
 @app.post("/upload-csv/")
 async def upload_csv(
     file: UploadFile = File(...),
@@ -158,7 +158,7 @@ async def upload_csv(
         job.plot_path = plot_path
         db.commit()
 
-        # ✅ 配額控制：只保留最近 MAX_JOBS_PER_USER 筆
+        #  配額控制：只保留最近 MAX_JOBS_PER_USER 筆
         enforce_user_quota(db, user.id, keep=MAX_JOBS_PER_USER)
 
         return {"job_id": job_uid, "status": "queued"}
