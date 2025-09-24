@@ -1,6 +1,6 @@
 #  BioFlow 
 
-BioFlow 是一套專為生醫領域設計的資料處理與分析平台，支援 命令列操作 (CLI)、FastAPI 後端 API 與 Streamlit Web UI，並提供 Docker Compose 一鍵部署。使用者可透過 CSV 檔上傳實驗數據，系統會自動進行資料清理、差異分析並產生結果檔案（CSV、PNG 火山圖），BioFlow 可廣泛應用於 RNA-seq 等實驗數據分析與結果視覺化。
+BioFlow 是一套專為生醫領域設計的資料處理與分析平台，支援命令列操作 (CLI)、FastAPI 後端 API 與 Streamlit Web UI，並提供 Docker Compose 一鍵部署。使用者可透過 CSV 檔上傳實驗數據，系統會自動進行資料清理、差異分析並產生結果檔案（CSV、PNG 火山圖），BioFlow 可廣泛應用於 RNA-seq 等實驗數據分析與結果視覺化。
 
 ---
 
