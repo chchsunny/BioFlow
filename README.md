@@ -17,7 +17,10 @@ BioFlow 是一套專為生醫領域設計的資料處理與分析平台，支援
 
 ##  start up
 1. 開啟docker左下角呈現Engine running
-2. 執行
+2.打開終端機執行
+```bash
+ cd BIO_Project
+```
 ```bash
 docker compose up --build
 ```
