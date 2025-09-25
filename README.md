@@ -16,15 +16,20 @@ BioFlow 是一套專為生醫領域設計的資料處理與分析平台，支援
 ---
 
 ##  start up
-1. 開啟docker左下角呈現Engine running
-2.打開終端機執行
+
+1. 終端機執行
+```bash
+git clone https://github.com/chchsunny/BioFlow.git
+```
+2. 開啟docker左下角呈現Engine running
+3. 終端機執行
 ```bash
  cd BIO_Project
 ```
 ```bash
 docker compose up --build
 ```
-3. 啟動後
+4. 啟動後
 - API (FastAPI)：http://localhost:8000/docs
 - 前端 (Streamlit)：http://localhost:8501
 
