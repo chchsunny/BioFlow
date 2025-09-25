@@ -24,7 +24,7 @@ git clone https://github.com/chchsunny/BioFlow.git
 2. 開啟docker左下角呈現Engine running
 3. 終端機執行
 ```bash
- cd BIO_Project
+cd BioFlow
 ```
 ```bash
 docker compose up --build
