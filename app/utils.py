@@ -1,18 +1,15 @@
-# utils.py
 import csv
 import pandas as pd
 import numpy as np
-
-# 建議在無頭環境（伺服器）使用 Agg backend，避免找不到 GUI backend
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-# -------- 基本設定 --------
-# 必要欄位（請保持 list 型態）
+# ========= 基本設定 =========
+# 必要欄位
 REQUIRED_COLUMNS = ["gene", "ctrl", "treat"]
 
-# 欄位別名（不要覆蓋 REQUIRED_COLUMNS）
+# 欄位別名
 COLUMN_ALIASES = {
     "gene":  ["gene", "gene_id", "symbol", "Gene", "GENE"],
     "ctrl":  ["ctrl", "control", "CTRL", "Control", "ctl"],
@@ -20,7 +17,7 @@ COLUMN_ALIASES = {
 }
 
 
-# -------- I/O 與前處理 --------
+# ========= I/O 與前處理 =========
 def normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
     """把別名欄位自動改成標準欄名（不就地修改）"""
     df = df.copy()
@@ -112,7 +109,7 @@ def clean_data(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-# -------- 分析與視覺化 --------
+# ========= 分析與視覺化 =========
 def compute_diff(df: pd.DataFrame, eps: float = 1e-9):
     """
     計算 ctrl vs treat 的差異：

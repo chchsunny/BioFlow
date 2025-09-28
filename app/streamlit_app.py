@@ -1,4 +1,3 @@
-# streamlit_app.py — stable UI version
 import streamlit as st
 import requests
 import pandas as pd
@@ -11,16 +10,16 @@ API_BASE = os.getenv("API_BASE", "http://api:8000")
 # ========= 可調整區 =========
 BACKEND = "http://api:8000"     # BioFlow API (app.py)
 AUTH_BACKEND = "http://api:8000"  # Auth API (auth.py)
-USE_FORM_LOGIN = False                 # 若後端用 OAuth2PasswordRequestForm，改成 True
-JOBS_MY_ENDPOINT = "/jobs"             # ✅ 改成 /jobs，因為 app.py 已經實作 /jobs
+USE_FORM_LOGIN = False               
+JOBS_MY_ENDPOINT = "/jobs"            
 # ==========================
 
-# ←─── 新增：頁面設定 + 初始化 token（避免 KeyError）
+# 新增：頁面設定 + 初始化 token（避免 KeyError）
 st.set_page_config(page_title="BioFlow", page_icon="🧬", layout="wide")
 if "token" not in st.session_state:
     st.session_state["token"] = None
 
-# ---- Sidebar: 登入/註冊 ----
+# ========= Sidebar: 登入/註冊 =========
 st.sidebar.header("登入 / 註冊")
 
 with st.sidebar.expander("登入", expanded=True):
@@ -40,7 +39,7 @@ with st.sidebar.expander("登入", expanded=True):
                 else:
                     st.error("登入成功但沒有回傳 token")
             else:
-                # 後端可能回 text 或 {detail:...}
+              
                 try:
                     st.error(r.json().get("detail", r.text))
                 except Exception:
@@ -68,7 +67,7 @@ with st.sidebar.expander("註冊新帳號"):
 
 st.sidebar.write("---")
 
-# ←─── 修改：安全取得 token，避免直接索引造成 KeyError
+# 修改：安全取得 token，避免直接索引造成 KeyError
 token = st.session_state.get("token")
 is_logged_in = token is not None
 
@@ -77,16 +76,16 @@ if is_logged_in:
         st.session_state["token"] = None
         st.experimental_rerun()
 
-# ---- 主畫面 ----
+# ========= 主畫面 =========
 st.title("🧬 BioFlow - 分析面板")
 
 if not is_logged_in:
     st.info("目前為未登入狀態。你仍可看到介面，但操作按鈕會被停用。")
 
-# ←─── 修改：用 token 建 headers
+# 修改：用 token 建 headers
 headers = {"Authorization": f"Bearer {token}"} if is_logged_in else {}
 
-# ---- 上傳與分析 ----
+# ========= 上傳與分析 =========
 with st.expander("上傳 CSV 並執行分析", expanded=True):
     up = st.file_uploader("選擇 CSV 檔", type=["csv"], key="uploader_csv")
     start_disabled = (not is_logged_in) or (up is None)
@@ -127,8 +126,8 @@ with st.expander("上傳 CSV 並執行分析", expanded=True):
         except Exception as e:
             st.error(f"上傳/分析錯誤：{e}")
 
-# ---- 分析紀錄 ----
-st.subheader("📜 分析紀錄")
+# ========= 分析紀錄 =========
+st.subheader(" 分析紀錄")
 if is_logged_in:
     try:
         r = requests.get(f"{BACKEND}{JOBS_MY_ENDPOINT}", headers=headers, timeout=30)

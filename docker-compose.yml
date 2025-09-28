@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile.api
     env_file: .env
     environment:
-      DATABASE_URL: "sqlite:////app/data/bioflow.db"      # 明確注入，保底
+      DATABASE_URL: "sqlite:////app/data/bioflow.db"     
       SECRET_KEY: "${SECRET_KEY}"
       ALGORITHM: "${ALGORITHM}"
       ACCESS_TOKEN_EXPIRE_MINUTES: "${ACCESS_TOKEN_EXPIRE_MINUTES}"
@@ -15,12 +15,6 @@ services:
       - ./data:/app/data
     ports:
       - "8000:8000"
-    # 先關掉 healthcheck，等確認起來再打開
-    # healthcheck:
-    #   test: ["CMD-SHELL", "curl -fsS http://localhost:8000/health || exit 1"]
-    #   interval: 10s
-    #   timeout: 3s
-    #   retries: 5
 
   ui:
     build:
@@ -33,7 +27,7 @@ services:
       - "8501:8501"
     depends_on:
       api:
-        condition: service_started       # 先別用 healthy
+        condition: service_started     
     volumes:
       - ./uploads:/app/uploads
       - ./results:/app/results

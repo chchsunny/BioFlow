@@ -15,11 +15,10 @@ SECRET_KEY = os.getenv("SECRET_KEY", "CHANGE_ME_TO_A_RANDOM_SECRET")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))
 
-# ========= SQLite 自動防呆（只在 sqlite:// 才執行）=========
+# ========= SQLite =========
 try:
     url = make_url(DATABASE_URL)
 except Exception:
-    # 若 URL 解析失敗，就當作一般字串；後續交給 SQLAlchemy 報錯
     url = None
 
 if url and url.drivername.startswith("sqlite"):
@@ -39,7 +38,7 @@ if url and url.drivername.startswith("sqlite"):
             except Exception:
                 pass
 
-        # 3) 若檔案不存在就先建立一顆空 DB（避免 "unable to open database file"）
+        # 3) 若檔案不存在就先建立一顆空 DB
         if not os.path.exists(db_path):
             try:
                 conn = sqlite3.connect(db_path)
@@ -48,7 +47,7 @@ if url and url.drivername.startswith("sqlite"):
                 # 若建立失敗也不擋住後續，讓 SQLAlchemy 報更完整的錯
                 pass
 
-        # 4) 嘗試放寬權限（Windows 掛載時仍以主機為準；在 Linux 容器有效）
+        # 4) 嘗試放寬權限
         for p in (db_dir, db_path):
             try:
                 os.chmod(p, 0o777 if os.path.isdir(p) else 0o666)
@@ -117,7 +116,7 @@ def decode_token(token: str) -> dict | None:
     except Exception:
         return None
 
-# ========= Session 依賴 =========
+# ========= Session  =========
 def get_db():
     db = SessionLocal()
     try:

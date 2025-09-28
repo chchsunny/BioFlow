@@ -1,4 +1,5 @@
 import argparse
+import pandas as pd 
 from app.analysis import run_analysis
 from app.utils import load_data, save_result_to_csv
 

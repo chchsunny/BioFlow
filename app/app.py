@@ -1,4 +1,11 @@
-# app.py — BioFlow API (username-based auth, /jobs list, /jobs/{id} download)
+"""
+BioFlow API 主程式
+功能：
+- 使用者註冊 / 登入 (JWT)
+- 上傳 CSV 並進行基因差異分析
+- 管理分析任務 (查詢、刪除、下載結果/圖表)
+- 健康檢查 (health check)
+"""
 from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, Query, status
 from fastapi.responses import FileResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -14,7 +21,6 @@ from app.utils import (
     compute_diff,
     plot_volcano
 )
-
 app = FastAPI()
 
 @app.get("/")
@@ -29,18 +35,19 @@ from app.db import (
 
 app = FastAPI(title="BioFlow API", version="0.3.4", debug=True)
 
-# ★ 每位使用者最多保留幾筆任務
+#  每位使用者最多保留幾筆任務
 MAX_JOBS_PER_USER = 20
 
-# ✅ 啟動時初始化
+#  啟動時初始化
 @app.on_event("startup")
 def on_startup():
     init_db()
     os.makedirs("uploads", exist_ok=True)
     os.makedirs("results", exist_ok=True)
-    print("✅ Database initialized and folders ready.")
+    print(" Database initialized and folders ready.")
 
-# ----------------- Security / helpers -----------------
+# ========= Security / helpers =========
+"""驗證 JWT Token"""
 security = HTTPBearer()
 
 def current_user(
@@ -79,12 +86,12 @@ def enforce_user_quota(db: Session, user_id: int, keep: int = MAX_JOBS_PER_USER)
         db.delete(j)
     db.commit()
 
-# ----------------- Health -----------------
+# ========= Health =========
 @app.get("/health")
 def health():
     return {"status": "ok"}
 
-# ----------------- （可保留）內建 Auth（若你用獨立 auth.py 可忽略） -----------------
+# ========= 內建 Auth =========
 @app.post("/auth/register")
 def register(username: str, password: str, db: Session = Depends(get_db)):
     if db.query(User).filter(User.username == username).first():
@@ -102,7 +109,7 @@ def login(username: str, password: str, db: Session = Depends(get_db)):
     token = create_access_token({"sub": user.username})
     return {"access_token": token, "token_type": "bearer"}
 
-# ----------------- 上傳 + 分析 -----------------
+# ========= 上傳 + 分析 =========
 @app.post("/upload-csv/")
 async def upload_csv(
     file: UploadFile = File(...),
@@ -158,7 +165,7 @@ async def upload_csv(
         job.plot_path = plot_path
         db.commit()
 
-        # ✅ 配額控制：只保留最近 MAX_JOBS_PER_USER 筆
+        #  配額控制：只保留最近 MAX_JOBS_PER_USER 筆
         enforce_user_quota(db, user.id, keep=MAX_JOBS_PER_USER)
 
         return {"job_id": job_uid, "status": "queued"}
@@ -170,7 +177,7 @@ async def upload_csv(
         db.commit()
         raise HTTPException(status_code=500, detail=f"分析時發生錯誤: {e}")
 
-# ----------------- 歷史任務（清單） -----------------
+# ========= 歷史清單 =========
 @app.get("/jobs")
 def my_jobs(
     user: User = Depends(current_user),
@@ -196,7 +203,7 @@ def my_jobs(
         for j in jobs
     ]
 
-# ----------------- 單筆 job 查詢 / 下載 -----------------
+# ========= 單筆 job 查詢 / 下載 =========
 @app.get("/jobs/{job_id}")
 def get_job(
     job_id: str,
@@ -233,7 +240,7 @@ def get_job(
         "plot_filename": os.path.basename(j.plot_path) if j.plot_path else None,
     }
 
-# ----------------- 刪除任務（含檔案） -----------------
+# ========= 刪除檔案 =========
 @app.delete("/jobs/{job_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_job(
     job_id: str,
@@ -246,9 +253,9 @@ def delete_job(
     _delete_job_files(j)
     db.delete(j)
     db.commit()
-    return  # 204 No Content
+    return  
 
-# ----------------- 以檔名下載 -----------------
+# ========= 以檔名下載 =========
 @app.get("/results/{filename}")
 def get_result(
     filename: str,

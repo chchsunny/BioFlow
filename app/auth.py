@@ -8,17 +8,21 @@ from passlib.context import CryptContext
 from datetime import datetime, timedelta
 import jwt
 
-# ===== 基本設定 =====
+# ===== 基本設定：JWT 與資料庫 =====
 SECRET_KEY = "CHANGE_ME_TO_A_RANDOM_SECRET"
-ALGORITHM = "HS256"
+ALGORITHM = "HS256"                    
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
 
+# SQLite 資料庫連線 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./bioflow.db"
 engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
+
+# 密碼設定
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+# 建立資料庫連線
 def get_db():
     db = SessionLocal()
     try:
