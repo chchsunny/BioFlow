@@ -30,7 +30,7 @@ if url and url.drivername.startswith("sqlite"):
         # 1) 確保資料夾存在
         os.makedirs(db_dir, exist_ok=True)
 
-        # 2) 若有人誤把 /app/bioflow.db 建成「資料夾」，自動移除
+        # 2) 若有人誤把 /app/bioflow.db 建成資料夾，自動移除
         wrong_dir = "/app/bioflow.db"
         if os.path.isdir(wrong_dir):
             try:
@@ -44,7 +44,6 @@ if url and url.drivername.startswith("sqlite"):
                 conn = sqlite3.connect(db_path)
                 conn.close()
             except Exception:
-                # 若建立失敗也不擋住後續，讓 SQLAlchemy 報更完整的錯
                 pass
 
         # 4) 嘗試放寬權限
@@ -55,25 +54,32 @@ if url and url.drivername.startswith("sqlite"):
                 pass
 
 # ========= SQLAlchemy 基礎 =========
+
+# 設定 SQLite 參數
 connect_args = {}
 if url and url.drivername.startswith("sqlite"):
     connect_args = {"check_same_thread": False}
 
+# 建立資料庫Engine (負責連線)
 engine = create_engine(
     DATABASE_URL,
     connect_args=connect_args,
     pool_pre_ping=True,
 )
+
+# 建立 Session (操作資料庫用)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# 支援多演算法（新雜湊用 argon2，舊的仍可驗證）
+# 支援多演算法
 pwd_context = CryptContext(
     schemes=["argon2", "pbkdf2_sha256", "bcrypt"],
     deprecated="auto",
 )
 
 # ========= 資料表 =========
+
+# User 表
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
@@ -82,6 +88,7 @@ class User(Base):
 
     jobs = relationship("Job", back_populates="user")
 
+# job 表
 class Job(Base):
     __tablename__ = "jobs"
     id = Column(Integer, primary_key=True, index=True)
@@ -103,23 +110,28 @@ def init_db():
     Base.metadata.create_all(bind=engine)
 
 # ========= 密碼/Token =========
-# 上限主要避免極端長度造成效能問題／第三方 lib 的隱性限制
+
+# 參數設定
 MAX_PASSWORD_BYTES = 256
 
+# 檢查密碼是否合格
 def _ensure_password_ok(pw: str) -> None:
     if not pw:
         raise ValueError("密碼不可為空")
     if len(pw.encode("utf-8")) > MAX_PASSWORD_BYTES:
         raise ValueError("密碼過長，請縮短（上限約 256 bytes）")
 
+# 雜湊密碼
 def hash_password(pw: str) -> str:
     _ensure_password_ok(pw)
     return pwd_context.hash(pw)
 
+# 驗證密碼
 def verify_password(plain: str, hashed: str) -> bool:
     _ensure_password_ok(plain)
     return pwd_context.verify(plain, hashed)
 
+# 檢查舊密碼是否需要更新
 def password_needs_update(hashed: str) -> bool:
     """可用於登入成功後檢查是否要把舊雜湊升級為 argon2。"""
     try:
@@ -127,12 +139,14 @@ def password_needs_update(hashed: str) -> bool:
     except Exception:
         return False
 
+# 建立 JWT Token
 def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
     to_encode = data.copy()
     expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
+# 解碼 JWT Token
 def decode_token(token: str) -> dict | None:
     try:
         return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])

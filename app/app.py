@@ -12,7 +12,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from typing import Optional, List, Dict, Any
 import os, shutil, datetime, uuid
-from fastapi import FastAPI
+
 from app.utils import (
     load_data,
     save_dataframe_to_csv,
@@ -21,11 +21,7 @@ from app.utils import (
     compute_diff,
     plot_volcano
 )
-app = FastAPI()
 
-@app.get("/")
-def read_root():
-    return {"message": "Hello, BioFlow API is running!"}
 # 從 db.py 匯入
 from app.db import (
     SessionLocal, init_db, get_db,
@@ -33,12 +29,13 @@ from app.db import (
     create_access_token, decode_token
 )
 
+# ========= FastAPI 初始化 =========
 app = FastAPI(title="BioFlow API", version="0.3.4", debug=True)
 
-#  每位使用者最多保留幾筆任務
-MAX_JOBS_PER_USER = 20
+# ========= 常數設定 =========
+MAX_JOBS_PER_USER = 20  # 每位使用者最多保留幾筆任務
 
-#  啟動時初始化
+# ========= 啟動時初始化 =========
 @app.on_event("startup")
 def on_startup():
     init_db()
@@ -46,10 +43,15 @@ def on_startup():
     os.makedirs("results", exist_ok=True)
     print(" Database initialized and folders ready.")
 
+# ========= 首頁 =========
+@app.get("/")
+def root():
+    return {"message": "Welcome to BioFlow API", "version": "0.3.4"}
+
 # ========= Security / helpers =========
-"""驗證 JWT Token"""
 security = HTTPBearer()
 
+# 驗證目前使用者 (透過 JWT Token)
 def current_user(
     creds: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db)
@@ -57,14 +59,14 @@ def current_user(
     payload = decode_token(creds.credentials)
     if not payload or "sub" not in payload:
         raise HTTPException(status_code=401, detail="Invalid token")
-    username = payload["sub"]  # 用 username（和 auth.py / Streamlit 對齊）
+    username = payload["sub"]
     user = db.query(User).filter(User.username == username).first()
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
     return user
 
+# 刪除相關檔案
 def _delete_job_files(job: Job):
-    """安全刪除與任務相關的檔案"""
     for p in (job.result_path, job.plot_path, job.upload_path):
         if p and os.path.exists(p):
             try:
@@ -72,11 +74,8 @@ def _delete_job_files(job: Job):
             except Exception:
                 pass
 
+# 只保留使用者最近的結果，較舊的自動刪除
 def enforce_user_quota(db: Session, user_id: int, keep: int = MAX_JOBS_PER_USER):
-    """
-    只保留使用者最近 keep 筆；較舊的自動刪除（含檔案）
-    在 /upload-csv/ 成功後呼叫。
-    """
     q = (db.query(Job)
          .filter(Job.user_id == user_id)
          .order_by(Job.created_at.desc()))
@@ -91,7 +90,9 @@ def enforce_user_quota(db: Session, user_id: int, keep: int = MAX_JOBS_PER_USER)
 def health():
     return {"status": "ok"}
 
-# ========= 內建 Auth =========
+# ========= Auth =========
+
+# 註冊
 @app.post("/auth/register")
 def register(username: str, password: str, db: Session = Depends(get_db)):
     if db.query(User).filter(User.username == username).first():
@@ -101,6 +102,7 @@ def register(username: str, password: str, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "registered"}
 
+# 登錄
 @app.post("/auth/login")
 def login(username: str, password: str, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == username).first()
@@ -110,12 +112,16 @@ def login(username: str, password: str, db: Session = Depends(get_db)):
     return {"access_token": token, "token_type": "bearer"}
 
 # ========= 上傳 + 分析 =========
+
+# 建立臨時資料夾
 @app.post("/upload-csv/")
 async def upload_csv(
     file: UploadFile = File(...),
     user: User = Depends(current_user),
     db: Session = Depends(get_db)
 ):
+
+# 上傳檔案檢查與儲存
     if not file.filename.lower().endswith(".csv"):
         raise HTTPException(status_code=400, detail="只接受 .csv 檔案")
 
@@ -123,11 +129,13 @@ async def upload_csv(
     with open(upload_path, "wb") as f:
         shutil.copyfileobj(file.file, f)
 
+# 建立job
     job_uid = str(uuid.uuid4())
     job = Job(job_id=job_uid, status="queued", upload_path=upload_path, user_id=user.id)
     db.add(job)
     db.commit()
 
+# 資料驗證與清理
     try:
         df = load_data(upload_path)
         if df is None or df.shape[0] == 0:
@@ -147,6 +155,7 @@ async def upload_csv(
             db.commit()
             raise HTTPException(status_code=400, detail="清理後資料為空")
 
+# 差異分析與結果輸出
         result_df, summary = compute_diff(df_clean)
 
         ts = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -158,18 +167,20 @@ async def upload_csv(
         plot_path = os.path.join("results", plot_filename)
         plot_volcano(result_df, plot_path)
 
-        # 更新 Job（finished）
+# 更新狀態
         job.status = "finished"
         job.summary = summary
         job.result_path = result_path
         job.plot_path = plot_path
         db.commit()
 
-        #  配額控制：只保留最近 MAX_JOBS_PER_USER 筆
+# 配額控制
         enforce_user_quota(db, user.id, keep=MAX_JOBS_PER_USER)
 
+# 回傳結果
         return {"job_id": job_uid, "status": "queued"}
 
+# 錯誤處理
     except HTTPException:
         raise
     except Exception as e:
@@ -183,12 +194,16 @@ def my_jobs(
     user: User = Depends(current_user),
     db: Session = Depends(get_db)
 ) -> List[Dict[str, Any]]:
+    
+# 查詢jobs
     jobs = (
         db.query(Job)
         .filter(Job.user_id == user.id)
         .order_by(Job.created_at.desc())
         .all()
     )
+
+# 回傳結果
     return [
         {
             "job_id": j.job_id,
@@ -203,7 +218,7 @@ def my_jobs(
         for j in jobs
     ]
 
-# ========= 單筆 job 查詢 / 下載 =========
+# ========= 單筆job下載 =========
 @app.get("/jobs/{job_id}")
 def get_job(
     job_id: str,
@@ -212,23 +227,25 @@ def get_job(
     user: User = Depends(current_user),
     db: Session = Depends(get_db)
 ):
+    
+# 查詢 Job
     j = db.query(Job).filter(Job.job_id == job_id, Job.user_id == user.id).first()
     if not j:
         raise HTTPException(status_code=404, detail="Job not found")
 
+# 處理下載請求
     if download:
         target: Optional[str] = None
         if kind == "result":
             target = j.result_path
         elif kind == "plot":
             target = j.plot_path
-        if not target:
-            raise HTTPException(status_code=404, detail="檔案尚未產生")
-        if not os.path.exists(target):
+        if not target or not os.path.exists(target):
             raise HTTPException(status_code=404, detail="檔案不存在")
         return FileResponse(target, media_type="application/octet-stream",
                             filename=os.path.basename(target))
 
+# 回傳結果
     return {
         "job_id": j.job_id,
         "status": j.status,
@@ -240,16 +257,20 @@ def get_job(
         "plot_filename": os.path.basename(j.plot_path) if j.plot_path else None,
     }
 
-# ========= 刪除檔案 =========
+# ========= 刪除job =========
 @app.delete("/jobs/{job_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_job(
     job_id: str,
     user: User = Depends(current_user),
     db: Session = Depends(get_db)
 ):
+    
+# 查詢job
     j = db.query(Job).filter(Job.job_id == job_id, Job.user_id == user.id).first()
     if not j:
         raise HTTPException(status_code=404, detail="Job not found")
+    
+# 刪除檔案資料
     _delete_job_files(j)
     db.delete(j)
     db.commit()
@@ -262,6 +283,8 @@ def get_result(
     user: User = Depends(current_user),
     db: Session = Depends(get_db)
 ):
+    
+# 從資料庫取出該使用者的所有job，找出符合檔名的結果檔或圖表檔
     jobs = db.query(Job).filter(Job.user_id == user.id).all()
 
     candidate_paths = []
@@ -271,10 +294,13 @@ def get_result(
         if job.plot_path and os.path.basename(job.plot_path) == filename:
             candidate_paths.append(job.plot_path)
 
+ # 如果完全找不到符合的檔案回傳 404
     if not candidate_paths:
         raise HTTPException(status_code=404, detail="找不到你的檔案")
 
     path = candidate_paths[0]
+
+# 如果檔案路徑存在於資料庫，但檔案本身已被刪除回傳 404
     if not os.path.exists(path):
         raise HTTPException(status_code=404, detail="檔案不存在")
 

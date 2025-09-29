@@ -1,4 +1,4 @@
-# auth.py  — FastAPI 最小可用登入/註冊 + JWT
+# auth.py  — FastAPI 登入/註冊 + JWT
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
@@ -49,21 +49,26 @@ class TokenResp(BaseModel):
     token_type: str = "bearer"
 
 # ===== 工具 =====
+
+# 產生一個 JWT Token
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
     expire = datetime.utcnow() + (expires_delta or timedelta(minutes=15))
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
+# 驗證密碼
 def verify_password(plain, hashed):
     return pwd_context.verify(plain, hashed)
 
+# 雜湊密碼 
 def hash_password(pw: str) -> str:
     return pwd_context.hash(pw)
 
 # ===== App =====
 app = FastAPI(title="Auth API")
 
+#註冊API
 @app.post("/auth/register", status_code=201)
 def register(req: RegisterReq, db: Session = Depends(get_db)):
     if not req.username or not req.password:
@@ -77,6 +82,7 @@ def register(req: RegisterReq, db: Session = Depends(get_db)):
     db.refresh(user)
     return {"id": user.id, "username": user.username}
 
+# 登錄API
 @app.post("/auth/login", response_model=TokenResp)
 def login(req: RegisterReq, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == req.username).first()
@@ -86,6 +92,7 @@ def login(req: RegisterReq, db: Session = Depends(get_db)):
     token = create_access_token({"sub": req.username}, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     return {"access_token": token, "token_type": "bearer"}
 
+# 檢查API
 @app.get("/health")
 def health():
     return {"ok": True}
