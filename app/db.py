@@ -66,7 +66,12 @@ engine = create_engine(
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# ✅ 改用 argon2（不載入 bcrypt，避免初始化檢測報錯）
+pwd_context = CryptContext(
+    schemes=["argon2", "pbkdf2_sha256", "bcrypt"],
+    deprecated="auto",
+)
 
 # ========= 資料表 =========
 class User(Base):
