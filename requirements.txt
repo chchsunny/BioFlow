@@ -8,6 +8,6 @@ requests
 streamlit
 sqlalchemy
 python-jose[cryptography]
-passlib[bcrypt]
-bcrypt
 matplotlib
+bcrypt>=4.1.2
+passlib[argon2]==1.7.4

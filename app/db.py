@@ -67,7 +67,7 @@ engine = create_engine(
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# ✅ 改用 argon2（不載入 bcrypt，避免初始化檢測報錯）
+# 支援多演算法（新雜湊用 argon2，舊的仍可驗證）
 pwd_context = CryptContext(
     schemes=["argon2", "pbkdf2_sha256", "bcrypt"],
     deprecated="auto",
@@ -103,11 +103,29 @@ def init_db():
     Base.metadata.create_all(bind=engine)
 
 # ========= 密碼/Token =========
+# 上限主要避免極端長度造成效能問題／第三方 lib 的隱性限制
+MAX_PASSWORD_BYTES = 256
+
+def _ensure_password_ok(pw: str) -> None:
+    if not pw:
+        raise ValueError("密碼不可為空")
+    if len(pw.encode("utf-8")) > MAX_PASSWORD_BYTES:
+        raise ValueError("密碼過長，請縮短（上限約 256 bytes）")
+
 def hash_password(pw: str) -> str:
+    _ensure_password_ok(pw)
     return pwd_context.hash(pw)
 
 def verify_password(plain: str, hashed: str) -> bool:
+    _ensure_password_ok(plain)
     return pwd_context.verify(plain, hashed)
+
+def password_needs_update(hashed: str) -> bool:
+    """可用於登入成功後檢查是否要把舊雜湊升級為 argon2。"""
+    try:
+        return pwd_context.needs_update(hashed)
+    except Exception:
+        return False
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
     to_encode = data.copy()
