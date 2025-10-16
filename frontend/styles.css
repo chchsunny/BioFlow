@@ -1,0 +1,39 @@
+:root{
+  --bg:#0b1020;
+  --card:#151c34;
+  --muted:#9aa4c7;
+  --text:#eef2ff;
+  --primary:#3b82f6;
+  --danger:#ef4444;
+  --success:#10b981;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:var(--bg); color:var(--text);
+}
+.app-header{display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-bottom:1px solid #232a49}
+.header-right{display:flex; gap:12px; align-items:center}
+.api-config{display:flex; gap:8px; align-items:center}
+.api-config input{width:260px}
+.sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); border:0}
+.auth-state{color:var(--muted)}
+.container{display:flex; gap:24px; padding:24px; align-items:flex-start}
+.sidebar{width:320px; display:flex; flex-direction:column; gap:16px}
+.content{flex:1; display:flex; flex-direction:column; gap:16px}
+.card{background:var(--card); border:1px solid #232a49; border-radius:12px; padding:16px}
+.form-row{display:flex; flex-direction:column; gap:6px; margin-bottom:10px}
+label{font-size:12px; color:var(--muted)}
+input[type="text"], input[type="password"], input[type="file"]{background:#0e1430; border:1px solid #2a335b; color:var(--text); padding:10px 12px; border-radius:8px}
+button{background:var(--primary); color:white; border:none; padding:10px 14px; border-radius:8px; cursor:pointer}
+button:disabled{opacity:.5; cursor:not-allowed}
+button.danger{background:var(--danger)}
+.status{margin-top:10px; color:var(--muted)}
+.muted{color:var(--muted)}
+.hidden{display:none}
+table{width:100%; border-collapse:collapse}
+th,td{border-bottom:1px solid #232a49; padding:10px; text-align:left}
+a.link{color:var(--primary); text-decoration:none}
+.badge{display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; background:#263260}
+.badge.success{background:#0c3f2f; color:#7eead1}
+.badge.failed{background:#401c1c; color:#ffb4b4}
+

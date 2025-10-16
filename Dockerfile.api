@@ -9,7 +9,15 @@ COPY requirements.txt /app/requirements.txt
 RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/* \
     && python -m pip install --no-cache-dir -r requirements.txt
 
-COPY . /app
+# 僅複製必要檔案，避免把本機 cache 帶入 image
+COPY app /app/app
+COPY frontend /app/frontend
+COPY data /app/data
+COPY results /app/results
+COPY uploads /app/uploads
+COPY requirements.txt /app/requirements.txt
+COPY docker-compose.yml /app/docker-compose.yml
+COPY README.md /app/README.md
 
 RUN mkdir -p /app/data
 

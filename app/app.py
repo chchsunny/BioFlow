@@ -8,7 +8,10 @@ BioFlow API 主程式
 """
 from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, Query, status
 from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from pydantic import BaseModel
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from typing import Optional, List, Dict, Any
 import os, shutil, datetime, uuid
@@ -31,6 +34,29 @@ from app.db import (
 
 # ========= FastAPI 初始化 =========
 app = FastAPI(title="BioFlow API", version="0.3.4", debug=True)
+
+# 啟用 CORS：顯式允許常見本機前端來源，避免瀏覽器阻擋
+_default_origins = (
+    os.getenv("CORS_ORIGINS")
+    or "http://localhost:5500,http://127.0.0.1:5500,"
+       "http://localhost:3000,http://127.0.0.1:3000,"
+       "http://localhost:5173,http://127.0.0.1:5173,"
+       "http://localhost:8501"
+)
+ALLOW_ORIGINS = [o.strip() for o in _default_origins.split(",") if o.strip()]
+
+# 只在需要時啟用 CORS（同源提供 /web 時預設不啟用，避免中介層錯誤）
+if os.getenv("ENABLE_CORS", "false").lower() == "true":
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=ALLOW_ORIGINS,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+# 提供前端靜態檔（同源開發：避免 CORS）
+app.mount("/web", StaticFiles(directory="frontend", html=True), name="web")
 
 # ========= 常數設定 =========
 MAX_JOBS_PER_USER = 20  # 每位使用者最多保留幾筆任務
@@ -92,6 +118,11 @@ def health():
 
 # ========= Auth =========
 
+# JSON 請求模型
+class AuthReq(BaseModel):
+    username: str
+    password: str
+
 # 註冊
 @app.post("/auth/register")
 def register(username: str, password: str, db: Session = Depends(get_db)):
@@ -107,6 +138,43 @@ def register(username: str, password: str, db: Session = Depends(get_db)):
 def login(username: str, password: str, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == username).first()
     if not user or not verify_password(password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="Bad credentials")
+    token = create_access_token({"sub": user.username})
+    return {"access_token": token, "token_type": "bearer"}
+
+# GET 版（用於疑難排解與簡化 CORS）
+@app.get("/auth/register")
+def register_get(username: str, password: str, db: Session = Depends(get_db)):
+    if db.query(User).filter(User.username == username).first():
+        raise HTTPException(status_code=409, detail="Username already registered")
+    user = User(username=username, hashed_password=hash_password(password))
+    db.add(user)
+    db.commit()
+    return {"message": "registered"}
+
+@app.get("/auth/login")
+def login_get(username: str, password: str, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == username).first()
+    if not user or not verify_password(password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="Bad credentials")
+    token = create_access_token({"sub": user.username})
+    return {"access_token": token, "token_type": "bearer"}
+
+# JSON 版註冊
+@app.post("/auth/register-json")
+def register_json(req: AuthReq, db: Session = Depends(get_db)):
+    if db.query(User).filter(User.username == req.username).first():
+        raise HTTPException(status_code=409, detail="Username already registered")
+    user = User(username=req.username, hashed_password=hash_password(req.password))
+    db.add(user)
+    db.commit()
+    return {"message": "registered"}
+
+# JSON 版登入
+@app.post("/auth/login-json")
+def login_json(req: AuthReq, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == req.username).first()
+    if not user or not verify_password(req.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Bad credentials")
     token = create_access_token({"sub": user.username})
     return {"access_token": token, "token_type": "bearer"}

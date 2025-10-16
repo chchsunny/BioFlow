@@ -8,6 +8,8 @@ from jose import jwt
 import os
 import sqlite3
 import shutil
+from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy.sql import func
 
 # ========= 基本設定 =========
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:////app/data/bioflow.db")
@@ -71,11 +73,29 @@ engine = create_engine(
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# 支援多演算法
-pwd_context = CryptContext(
-    schemes=["argon2", "pbkdf2_sha256", "bcrypt"],
-    deprecated="auto",
-)
+# 支援多演算法；若系統沒裝 argon2-cffi，會自動降級為 pbkdf2/bcrypt
+def _build_pwd_context():
+    # 先嘗試使用 argon2，若實際 hash 時拋出 MissingBackendError 再降級
+    try:
+        ctx = CryptContext(
+            schemes=["argon2", "pbkdf2_sha256", "bcrypt"],
+            deprecated="auto",
+        )
+        # 直接做一次測試雜湊來確認 backend 是否真的可用
+        try:
+            _ = ctx.hash("__probe__")
+            return ctx
+        except Exception:
+            pass
+    except Exception:
+        pass
+    # 降級（無 argon2）
+    return CryptContext(
+        schemes=["pbkdf2_sha256", "bcrypt"],
+        deprecated="auto",
+    )
+
+pwd_context = _build_pwd_context()
 
 # ========= 資料表 =========
 
@@ -160,3 +180,4 @@ def get_db():
         yield db
     finally:
         db.close()
+

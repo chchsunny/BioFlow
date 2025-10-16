@@ -9,5 +9,5 @@ streamlit
 sqlalchemy
 python-jose[cryptography]
 matplotlib
-bcrypt>=4.1.2
+bcrypt==4.0.1
 passlib[argon2]==1.7.4

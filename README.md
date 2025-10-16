@@ -35,6 +35,28 @@ docker compose up --build
 
 ---
 
+##  New Browser Frontend (HTML/CSS/JS)
+
+我們新增了 `frontend/` 靜態網站，提供與 Streamlit 類似的介面：登入/註冊、CSV 上傳分析、任務列表、結果下載/刪除。
+
+本機開發步驟：
+
+1) 啟動 API：
+```bash
+uvicorn app.app:app --reload --host 0.0.0.0 --port 8000
+```
+
+2) 啟動靜態網站（任一靜態伺服器皆可）：
+```bash
+python -m http.server 5500 -d frontend
+```
+
+3) 瀏覽器開啟 http://localhost:5500
+
+如需調整 API 位址，修改 `frontend/app.js` 內的 `API_BASE`。
+
+---
+
 ##  results
 <img width="1566" height="772" alt="image" src="https://github.com/user-attachments/assets/2fe687d1-8f01-46f3-8316-54ae749ba100" />
 

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BioFlow 🧬</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <h1>🧬 BioFlow - 分析面板</h1>
+    <div class="header-right">
+      <div id="api-indicator" class="muted">API: 檢查中…</div>
+      <div class="api-config">
+        <label for="api-base" class="sr-only">API</label>
+        <input id="api-base" type="text" placeholder="http://localhost:8000" />
+        <button id="btn-save-api">儲存</button>
+      </div>
+      <div id="auth-state" class="auth-state">未登入</div>
+    </div>
+  </header>
+
+  <main class="container">
+    <aside class="sidebar">
+      <section class="card">
+        <h2>登入</h2>
+        <div class="form-row">
+          <label>帳號</label>
+          <input id="login-username" type="text" placeholder="username" />
+        </div>
+        <div class="form-row">
+          <label>密碼</label>
+          <input id="login-password" type="password" placeholder="password" />
+        </div>
+        <button id="btn-login">登入</button>
+      </section>
+
+      <section class="card">
+        <h2>註冊</h2>
+        <div class="form-row">
+          <label>帳號</label>
+          <input id="register-username" type="text" placeholder="username" />
+        </div>
+        <div class="form-row">
+          <label>密碼</label>
+          <input id="register-password" type="password" placeholder="password" />
+        </div>
+        <button id="btn-register">註冊</button>
+      </section>
+
+      <button id="btn-logout" class="danger" disabled>登出</button>
+    </aside>
+
+    <section class="content">
+      <section class="card">
+        <h2>上傳 CSV 並執行分析</h2>
+        <input id="file-input" type="file" accept=".csv" />
+        <button id="btn-start" disabled>開始分析</button>
+        <div id="status" class="status"></div>
+      </section>
+
+      <section class="card">
+        <h2>分析紀錄</h2>
+        <div id="jobs-empty" class="muted">（登入後可查看你的分析記錄列表）</div>
+        <table id="jobs-table" class="jobs-table hidden">
+          <thead>
+            <tr>
+              <th>🆔</th>
+              <th>狀態</th>
+              <th>摘要</th>
+              <th>建立時間</th>
+              <th>下載 CSV</th>
+              <th>下載 PNG</th>
+              <th>刪除</th>
+            </tr>
+          </thead>
+          <tbody id="jobs-body"></tbody>
+        </table>
+      </section>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+  </body>
+  </html>
+
+

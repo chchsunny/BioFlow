@@ -9,27 +9,13 @@ services:
       SECRET_KEY: "${SECRET_KEY}"
       ALGORITHM: "${ALGORITHM}"
       ACCESS_TOKEN_EXPIRE_MINUTES: "${ACCESS_TOKEN_EXPIRE_MINUTES}"
+      ENABLE_CORS: "false"  # 前端改由 /web 同源提供，預設不開 CORS
     volumes:
       - ./uploads:/app/uploads
       - ./results:/app/results
       - ./data:/app/data
       - ./app:/app/app    
+      - ./frontend:/app/frontend
     ports:
       - "8000:8000"
 
-  ui:
-    build:
-      context: .
-      dockerfile: Dockerfile.streamlit
-    env_file: .env
-    environment:
-      - API_BASE=http://api:8000
-    ports:
-      - "8501:8501"
-    depends_on:
-      api:
-        condition: service_started     
-    volumes:
-      - ./uploads:/app/uploads
-      - ./results:/app/results
-      - ./data:/app/data

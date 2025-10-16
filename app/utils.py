@@ -17,9 +17,9 @@ COLUMN_ALIASES = {
 }
 
 
-# ========= I/O 與前處理 =========
+# ========= Input / Output前處理 =========
 def normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
-    """把別名欄位自動改成標準欄名（不就地修改）"""
+    """把別名欄位自動改成標準欄名"""
     df = df.copy()
     col_map = {}
     for std, aliases in COLUMN_ALIASES.items():
